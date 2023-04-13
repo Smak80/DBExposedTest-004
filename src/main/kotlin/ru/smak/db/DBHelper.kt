@@ -2,6 +2,7 @@ package ru.smak.db
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.DriverManager
 
@@ -99,5 +100,17 @@ fun main() {
         addLogger(StdOutSqlLogger)
         val all_deps = Department.find { Departments.location like "Бобр%" }
         all_deps.forEach { println(it) }
+    }
+    transaction {
+        val res = Join(
+            Departments, Employees,
+            onColumn = Departments.id,
+            otherColumn = Employees.departmentId,
+            joinType = JoinType.INNER,
+            additionalConstraint = {Departments.location like "Бобр%"}
+        ).selectAll()
+        res.forEach {
+            println(it[Employees.name])
+        }
     }
 }
